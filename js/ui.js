@@ -14,7 +14,7 @@ let tappedTimeout      = null;
 window.creationActive  = false;
 window.firstNode       = null;
 window.activePopup     = null;
-window.simulatedSeconds = 0; // სიმულაციის დროის საწყისი მნიშვნელობა
+window.simulatedSeconds = 0; 
 
 function closeActivePopup() {
   if (window.activePopup) {
@@ -28,17 +28,19 @@ function initializeCollapsibleContainers() {
   headers.forEach(header => {
     const content = header.nextElementSibling;
     if (!content) return;
-    header.addEventListener('click', () => {
-      content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    // საწყის ეტაპზე დავტოვოთ გახსნილი, რომ მონაცემები გამოჩნდეს
+    header.onclick = () => {
+      const isHidden = content.style.display === 'none';
+      content.style.display = isHidden ? 'block' : 'none';
       const toggle = header.querySelector('.collapsible-toggle');
-      if (toggle) toggle.textContent = content.style.display === 'none' ? '▼' : '▲';
-    });
+      if (toggle) toggle.textContent = isHidden ? '▲' : '▼';
+    };
   });
 }
 
 function speedToColor(speed) {
   const absSpeed = Math.abs(speed);
-  if (absSpeed < 0.1) return '#888'; // თუ სიჩქარე 0-ია, იყოს მუქი ნაცრისფერი (რომ გამოჩნდეს)
+  if (absSpeed < 0.1) return '#888'; 
   
   const stops = [
     { speed: 0, color: [136, 136, 136] }, 
@@ -61,9 +63,9 @@ function speedToColor(speed) {
 
 function animateDashOffset() {
   if (typeof cy === 'undefined' || !cy) { requestAnimationFrame(animateDashOffset); return; }
-  if (typeof simulationMode !== "undefined" && simulationMode !== "stop") {
+  if (typeof window.simulationMode !== "undefined" && window.simulationMode !== "stop") {
     const delta = 1 / 60;
-    let speedMultiplier = (simulationMode === "min") ? 2 : (simulationMode === "hour" ? 5 : 0.5);
+    let speedMultiplier = (window.simulationMode === "min") ? 2 : (window.simulationMode === "hour" ? 5 : 0.5);
     
     cy.edges().forEach(edge => {
       const v1 = parseFloat(edge.data('v1')) || 0, v2 = parseFloat(edge.data('v2')) || 0;
@@ -85,7 +87,6 @@ function animateDashOffset() {
   requestAnimationFrame(animateDashOffset);
 }
 
-// Cytoscape-ის ინიციალიზაცია მკაფიო ხაზებით
 let cy = cytoscape({
   container: document.getElementById('cy'),
   wheelSensitivity: 0.15,
@@ -97,7 +98,7 @@ let cy = cytoscape({
         'label': 'data(label)',
         'text-halign': 'center', 'text-valign': 'center', 'color': '#333', 'font-size': '10px', 'font-weight': 'bold',
         'width': '18px', 'height': '18px', 'border-width': 2, 'border-color': '#fff', 'text-wrap': 'wrap',
-        'z-index': 10 // წერტილები იყოს ხაზების ზემოთ
+        'z-index': 10
       }
     },
     {
@@ -112,25 +113,24 @@ let cy = cytoscape({
         'curve-style': 'bezier',
         'label': 'data(label)', 'font-size': '10px', 'text-rotation': 'autorotate', 'color': '#444',
         'opacity': 1,
-        'z-index': 1 // ხაზები იყოს წერტილების ქვეშ
+        'z-index': 1
       }
     },
     {
       selector: 'edge:selected',
-      style: { 'line-color': '#007bff', 'width': 5, 'opacity': 1 }
+      style: { 'line-color': '#007bff', 'width': 6, 'opacity': 1 }
     }
   ],
   layout: { name: 'preset' }
 });
 
-// გლობალურად ხელმისაწვდომი რომ იყოს
 window.cy = cy;
 
 function updateInfo() {
   if (!cy) return;
   let totalVol = 0, posInj = 0, negInj = 0;
   
-  let nodeHTML = `<table><tr><th>ID</th><th>სახელი</th><th>წნევა (ატმ)</th><th>ინექცია (მ³/სთ)</th></tr>`;
+  let nodeHTML = `<table class="info-table"><tr><th>ID</th><th>სახელი</th><th>წნევა (ატმ)</th><th>ინექცია (მ³/სთ)</th></tr>`;
   cy.nodes().forEach(node => {
     const inj = parseFloat(node.data('injection') || 0), pres_atm = parseFloat(node.data('pressure') || 0) * ATM_COEFF;
     inj > 0 ? posInj += inj : negInj += inj;
@@ -139,7 +139,7 @@ function updateInfo() {
   });
   nodeHTML += `</table>`;
 
-  let edgeHTML = `<table><tr><th>ID</th><th>სიგრძე (კმ)</th><th>დიამეტრი (მმ)</th><th>v1 (მ/წმ)</th><th>მოცულობა</th></tr>`;
+  let edgeHTML = `<table class="info-table"><tr><th>ID</th><th>L (კმ)</th><th>D (მმ)</th><th>v (მ/წმ)</th><th>მოცულობა</th></tr>`;
   cy.edges().forEach(edge => {
     const sumVol = (edge.data('volumeSegments') || []).reduce((s, v) => s + v, 0);
     totalVol += sumVol;
@@ -149,8 +149,10 @@ function updateInfo() {
   });
   edgeHTML += `</table>`;
 
-  document.getElementById('info-nodes').innerHTML = nodeHTML;
-  document.getElementById('info-edges').innerHTML = edgeHTML;
+  const nodeDiv = document.getElementById('info-nodes');
+  const edgeDiv = document.getElementById('info-edges');
+  if (nodeDiv) nodeDiv.innerHTML = nodeHTML;
+  if (edgeDiv) edgeDiv.innerHTML = edgeHTML;
   
   const summary = document.getElementById('simulation-summary');
   if (summary) {
