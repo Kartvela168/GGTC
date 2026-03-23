@@ -1,0 +1,196 @@
+/* common.css - GGTC ოფიციალური კორპორატიული სტილი */
+
+:root {
+  --primary-blue: #004a99;    /* GGTC მუქი ლურჯი */
+  --accent-blue: #007bff;     /* აქცენტის ლურჯი */
+  --light-bg: #f4f7f9;        /* გვერდის ფონი */
+  --white: #ffffff;           /* კონტეინერების ფონი */
+  --text-main: #333333;       /* ტექსტის ფერი */
+  --border-color: #e1e8ed;    /* ჩარჩოების ფერი */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+  --radius: 10px;
+}
+
+/* ზოგადი პარამეტრები */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans Georgian', 'Segoe UI', Arial, sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text-main);
+  height: 100%;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none;
+}
+
+/* ზედა ბარი (Header) - მუქი ლურჯი და თეთრი ტექსტით */
+nav {
+  width: 100%;
+  background-color: var(--primary-blue);
+  padding: 25px 0;
+  box-shadow: var(--shadow);
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 20px;
+}
+
+.main-title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.sub-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* მართვის პანელი (Controls) */
+#controls {
+  max-width: 1000px;
+  margin: 20px auto;
+  background-color: var(--white);
+  padding: 15px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.controlButton {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: #fff;
+  color: var(--primary-blue);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlButton:hover {
+  background-color: #f0f7ff;
+  border-color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+
+.controlButton.active {
+  background-color: var(--accent-blue);
+  color: white;
+  border-color: var(--primary-blue);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.controlButton.deactivated {
+  background-color: #f8f9fa !important;
+  color: #adb5bd !important;
+  border-color: #e9ecef !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+/* სახაზავი არე (Cytoscape) */
+#cy {
+  width: 95%;
+  height: 600px;
+  margin: 0 auto 20px;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* კონტეინერები და ცხრილები */
+.collapsible-container, .container {
+  max-width: 1000px;
+  margin: 15px auto;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.collapsible-header {
+  background-color: #fcfdfe;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.collapsible-header h3 {
+  color: var(--primary-blue);
+  font-size: 15px;
+  margin: 0;
+  font-weight: 600;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background-color: #f8f9fa;
+  color: var(--primary-blue);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 12px;
+  text-align: center;
+  border-bottom: 2px solid var(--border-color);
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f4f6;
+  font-size: 12px;
+  text-align: center;
+}
+
+tr:hover {
+  background-color: #f9fbff;
+}
+
+/* გამყოფი ხაზი ღილაკებს შორის */
+.separator {
+  width: 1px;
+  height: 30px;
+  background-color: #eee;
+  margin: 0 5px;
+}
+
+/* მობილური ადაპტაცია */
+@media (max-width: 768px) {
+  .main-title { font-size: 18px; }
+  .sub-title { font-size: 13px; }
+  #controls { padding: 10px; width: 95%; }
+  .controlButton { padding: 6px 10px; font-size: 11px; }
+}

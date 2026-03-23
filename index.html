@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MYJRPRS3TW"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', { 'analytics_storage': 'denied' });
+    gtag('js', new Date());
+    gtag('config', 'G-MYJRPRS3TW');
+  </script>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GGTC - ბუნებრივი გაზის ჰიდრავლიკური გაანგარიშება</title>
+  
+  <link rel="stylesheet" href="common.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.22.0/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <nav>
+    <div class="header-container">
+      <div class="main-title">GGTC - საქართველოს გაზის ტრანსპორტირების კომპანია</div>
+      <div class="sub-title">ბუნებრივი გაზის ჰიდრავლიკური გაანგარიშება</div>
+    </div>
+  </nav>
+
+  <div id="controls">
+    <button id="buildBtn" class="controlButton" title="აგების რეჟიმი">🔨 აგება</button>
+    <button id="clearBtn" class="controlButton" title="გასუფთავება">❌</button>
+    <button id="recoverButton" class="controlButton" title="აღდგენა">🔄 აღდგენა</button>
+    <button id="RandomBtn" class="controlButton" title="შემთხვევითი ქსელი">🎲 შემთხვევითი</button>  
+    
+    <span class="separator"></span>
+    
+    <button id="simulateBtn" class="controlButton" title="სიმულაციის რეჟიმი">⚡ გაშვება</button>
+    <button id="pauseBtn" class="controlButton" title="პაუზა">⏸️</button>
+    <button id="playBtn" class="controlButton" title="წამები">▶️</button>
+    <button id="playMinBtn" class="controlButton" title="წუთები">⏩</button>
+    <button id="playHourBtn" class="controlButton" title="საათები">⏭️</button>
+    <button id="resetButton" class="controlButton" title="რესეტი">↺</button>
+    <button id="csvButton" class="controlButton" title="CSV ექსპორტი">📈 ლოგი</button>
+    
+    <span class="separator"></span>
+
+    <button id="exportButton" class="controlButton" title="შენახვა">💾 შენახვა</button>
+    <button id="importButton" class="controlButton" title="ჩატვირთვა">📁 ჩატვირთვა</button>
+    <button id="helpButton" class="controlButton" title="დახმარება">❓</button>
+  </div>
+
+  <div id="cy"></div>
+    
+  <div class="collapsible-container">
+    <div class="collapsible-header">
+      <div id="simulation-summary" style="font-size: 0.95em; color: #004a99; font-weight: bold;">
+        ჯამური მოცულობა: 0.00 × 10⁶ მ³ | შემავალი: 0 მ³/სთ | დრო: 0 სთ 0 წთ 0 წმ
+      </div>
+      <span class="collapsible-toggle">▼</span>
+    </div>
+    <div class="collapsible-content">
+      <div id="info-edges"></div>
+    </div>
+  </div>
+
+  <div class="collapsible-container">
+    <div class="collapsible-header">
+      <h3>კვანძების მონაცემები და წნევები</h3>
+      <span class="collapsible-toggle">▼</span>
+    </div>
+    <div class="collapsible-content">
+      <div id="info-nodes"></div>
+    </div>
+  </div>
+
+  <footer class="container" style="text-align: center; color: #666; font-size: 0.9em; padding: 20px 0;">
+    <p><strong>მითითება:</strong> ქსელის ასაგებად გამოიყენეთ ორმაგი დაწკაპუნება. წნევის ერთეული: <b>ატმოსფერო (ატმ)</b>.</p>
+    <p>&copy; 2026 საქართველოს გაზის ტრანსპორტირების კომპანია (GGTC)</p>
+  </footer>
+
+  <script src="js/lang.js"></script>
+  <script src="js/formulas.js"></script>
+  <script src="js/simulation.js"></script> <script src="js/ui.js"></script>         <script src="js/graph_io.js"></script>
+  <script src="js/random_generator.js"></script>
+  <script src="js/csv_logger.js"></script>
+  <script src="js/cookies.js"></script>
+
+  <script>
+    window.uiMode = localStorage.getItem('uiMode') || 'build';
+    window.simState = 'pause';
+
+    function updateControlButtons() {
+      const ids = ['buildBtn','simulateBtn','clearBtn','RandomBtn','playBtn','playMinBtn','playHourBtn','pauseBtn','resetButton','csvButton','exportButton','importButton','recoverButton'];
+      ids.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('active','deactivated');
+      });
+
+      if (window.uiMode === 'build') {
+        document.getElementById('buildBtn').classList.add('active');
+        ['playBtn','playMinBtn','playHourBtn','pauseBtn','resetButton'].forEach(id => {
+            const b = document.getElementById(id);
+            if(b) b.classList.add('deactivated');
+        });
+      } else {
+        document.getElementById('simulateBtn').classList.add('active');
+        ['clearBtn','RandomBtn','recoverButton','buildBtn'].forEach(id => {
+            const b = document.getElementById(id);
+            if(b) b.classList.add('deactivated');
+        });
+        
+        const currentBtnId = window.simState === 'pause' ? 'pauseBtn' : 
+                           window.simState === 'play_sec' ? 'playBtn' :
+                           window.simState === 'play_min' ? 'playMinBtn' :
+                           window.simState === 'play_hour' ? 'playHourBtn' : '';
+        const actBtn = document.getElementById(currentBtnId);
+        if (actBtn) actBtn.classList.add('active');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // დაველოდოთ სკრიპტების სრულად ჩატვირთვას
+      setTimeout(() => {
+        updateControlButtons();
+        if (typeof updateInfo === 'function') updateInfo();
+      }, 200);
+
+      document.getElementById('buildBtn').onclick = () => {
+        window.uiMode = 'build';
+        localStorage.setItem('uiMode', 'build');
+        updateControlButtons();
+        if (typeof setSimulationMode === 'function') setSimulationMode('stop', window.cy, window.updateInfo);
+      };
+
+      document.getElementById('simulateBtn').onclick = () => {
+        window.uiMode = 'simulate';
+        window.simState = 'pause';
+        localStorage.setItem('uiMode', 'simulate');
+        updateControlButtons();
+        if (typeof setSimulationMode === 'function') setSimulationMode('stop', window.cy, window.updateInfo);
+      };
+
+      document.getElementById('playBtn').onclick = () => {
+        if (window.uiMode !== 'simulate') return;
+        if (typeof setSimulationMode === 'function') {
+            setSimulationMode('sec', window.cy, window.updateInfo);
+            window.simState = 'play_sec';
+            updateControlButtons();
+        }
+      };
+
+      document.getElementById('playMinBtn').onclick = () => {
+        if (window.uiMode !== 'simulate') return;
+        if (typeof setSimulationMode === 'function') {
+            setSimulationMode('min', window.cy, window.updateInfo);
+            window.simState = 'play_min';
+            updateControlButtons();
+        }
+      };
+
+      document.getElementById('playHourBtn').onclick = () => {
+        if (window.uiMode !== 'simulate') return;
+        if (typeof setSimulationMode === 'function') {
+            setSimulationMode('hour', window.cy, window.updateInfo);
+            window.simState = 'play_hour';
+            updateControlButtons();
+        }
+      };
+
+      document.getElementById('pauseBtn').onclick = () => {
+        if (typeof setSimulationMode === 'function') {
+            setSimulationMode('stop', window.cy, window.updateInfo);
+            window.simState = 'pause';
+            updateControlButtons();
+        }
+      };
+
+      document.getElementById('resetButton').onclick = () => {
+        if (window.uiMode !== 'simulate') return;
+        if (typeof resetSimulation === 'function') resetSimulation();
+        window.simState = 'pause';
+        updateControlButtons();
+      };
+
+      document.getElementById('clearBtn').onclick = () => {
+        if (window.uiMode !== 'build') return;
+        if (typeof clearGraph === 'function') clearGraph();
+      };
+      
+      document.getElementById('RandomBtn').onclick = () => {
+        if (window.uiMode !== 'build') return;
+        if (typeof generateRandomNetwork === 'function') generateRandomNetwork();
+      };
+    });
+  </script>
+
+  <div id="helpModalContainer" class="modal" style="display:none;">
+    <div class="modal-content" style="padding:0; max-width:750px; width:95vw; height:85vh; border-radius: 12px; overflow: hidden;">
+      <iframe id="helpIframe" src="help.html" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const helpButton = document.getElementById('helpButton');
+    const helpModalContainer = document.getElementById('helpModalContainer');
+    if (helpButton) {
+        helpButton.onclick = () => helpModalContainer.style.display = 'block';
+    }
+    window.onclick = (e) => { if (e.target === helpModalContainer) helpModalContainer.style.display = 'none'; };
+  </script>
+
+</body>
+</html>
