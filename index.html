@@ -56,7 +56,7 @@
   <div class="collapsible-container">
     <div class="collapsible-header">
       <div id="simulation-summary" style="font-size: 0.95em; color: #004a99; font-weight: bold;">
-        ჯამური მოცულობა: 0.00 × 10⁶ მ³ | შემავალი: 0 მ³/სთ | დრო: 0 სთ 0 წთ 0 წმ
+        📦 მოცულობა: 0.00 მ³ | 📥 შემავალი: 0 მ³/სთ | ⏱️ დრო: 0სთ 0წთ 0წმ
       </div>
       <span class="collapsible-toggle">▼</span>
     </div>
@@ -76,8 +76,8 @@
   </div>
 
   <footer class="container" style="text-align: center; color: #666; font-size: 0.9em; padding: 20px 0;">
-    <p><strong>მითითება:</strong> ქსელის ასაგებად გამოიყენეთ ორმაგი დაწკაპუნება. წნევის ერთეული: <b>ატმოსფერო (ატმ)</b>.</p>
-    <p>&copy; 2026 საქართველოს გაზის ტრანსპორტირების კომპანია (GGTC)</p>
+    <p><strong>ინსტრუქცია:</strong> გამოიყენეთ „აგება“ ქსელის შესაქმნელად და „გაშვება“ სიმულაციისთვის. ერთეული: <b>ატმოსფერო (ატმ)</b>.</p>
+    <p>&copy; 2026 GGTC. ყველა უფლება დაცულია.</p>
   </footer>
 
   <script src="js/lang.js"></script>
@@ -99,13 +99,15 @@
       });
 
       if (window.uiMode === 'build') {
-        document.getElementById('buildBtn').classList.add('active');
+        const bBtn = document.getElementById('buildBtn');
+        if(bBtn) bBtn.classList.add('active');
         ['playBtn','playMinBtn','playHourBtn','pauseBtn','resetButton'].forEach(id => {
             const b = document.getElementById(id);
             if(b) b.classList.add('deactivated');
         });
       } else {
-        document.getElementById('simulateBtn').classList.add('active');
+        const sBtn = document.getElementById('simulateBtn');
+        if(sBtn) sBtn.classList.add('active');
         ['clearBtn','RandomBtn','recoverButton','buildBtn'].forEach(id => {
             const b = document.getElementById(id);
             if(b) b.classList.add('deactivated');
@@ -125,8 +127,9 @@
       setTimeout(() => {
         updateControlButtons();
         if (typeof updateInfo === 'function') updateInfo();
-      }, 200);
+      }, 300);
 
+      // რეჟიმების გადართვა
       document.getElementById('buildBtn').onclick = () => {
         window.uiMode = 'build';
         localStorage.setItem('uiMode', 'build');
@@ -142,73 +145,69 @@
         if (typeof setSimulationMode === 'function') setSimulationMode('stop', window.cy, window.updateInfo);
       };
 
+      // სიმულაციის მართვა
       document.getElementById('playBtn').onclick = () => {
-        if (window.uiMode !== 'simulate') return;
-        if (typeof setSimulationMode === 'function') {
-            setSimulationMode('sec', window.cy, window.updateInfo);
-            window.simState = 'play_sec';
-            updateControlButtons();
-        }
+        if (window.uiMode !== 'simulate' || typeof setSimulationMode !== 'function') return;
+        setSimulationMode('sec', window.cy, window.updateInfo);
+        window.simState = 'play_sec';
+        updateControlButtons();
       };
 
       document.getElementById('playMinBtn').onclick = () => {
-        if (window.uiMode !== 'simulate') return;
-        if (typeof setSimulationMode === 'function') {
-            setSimulationMode('min', window.cy, window.updateInfo);
-            window.simState = 'play_min';
-            updateControlButtons();
-        }
+        if (window.uiMode !== 'simulate' || typeof setSimulationMode !== 'function') return;
+        setSimulationMode('min', window.cy, window.updateInfo);
+        window.simState = 'play_min';
+        updateControlButtons();
       };
 
       document.getElementById('playHourBtn').onclick = () => {
-        if (window.uiMode !== 'simulate') return;
-        if (typeof setSimulationMode === 'function') {
-            setSimulationMode('hour', window.cy, window.updateInfo);
-            window.simState = 'play_hour';
-            updateControlButtons();
-        }
+        if (window.uiMode !== 'simulate' || typeof setSimulationMode !== 'function') return;
+        setSimulationMode('hour', window.cy, window.updateInfo);
+        window.simState = 'play_hour';
+        updateControlButtons();
       };
 
       document.getElementById('pauseBtn').onclick = () => {
         if (typeof setSimulationMode === 'function') {
-            setSimulationMode('stop', window.cy, window.updateInfo);
-            window.simState = 'pause';
-            updateControlButtons();
+          setSimulationMode('stop', window.cy, window.updateInfo);
+          window.simState = 'pause';
+          updateControlButtons();
         }
       };
 
       document.getElementById('resetButton').onclick = () => {
-        if (window.uiMode !== 'simulate') return;
-        if (typeof resetSimulation === 'function') resetSimulation();
+        if (window.uiMode !== 'simulate' || typeof resetSimulation !== 'function') return;
+        resetSimulation();
         window.simState = 'pause';
         updateControlButtons();
       };
 
+      // დამხმარე ღილაკები
       document.getElementById('clearBtn').onclick = () => {
-        if (window.uiMode !== 'build') return;
-        if (typeof clearGraph === 'function') clearGraph();
+        if (window.uiMode === 'build' && typeof clearGraph === 'function') clearGraph();
       };
       
       document.getElementById('RandomBtn').onclick = () => {
-        if (window.uiMode !== 'build') return;
-        if (typeof generateRandomNetwork === 'function') generateRandomNetwork();
+        if (window.uiMode === 'build' && typeof generateRandomNetwork === 'function') generateRandomNetwork();
+      };
+
+      document.getElementById('recoverButton').onclick = () => {
+        if (window.uiMode === 'build' && typeof recoverGraph === 'function') recoverGraph();
       };
     });
   </script>
 
-  <div id="helpModalContainer" class="modal" style="display:none;">
-    <div class="modal-content" style="padding:0; max-width:750px; width:95vw; height:85vh; border-radius: 12px; overflow: hidden;">
+  <div id="helpModalContainer" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div class="modal-content" style="margin:5% auto; max-width:800px; width:90%; height:80vh; background:white; border-radius:12px; overflow:hidden;">
       <iframe id="helpIframe" src="help.html" style="width:100%; height:100%; border:none;"></iframe>
     </div>
   </div>
 
   <script>
-    const helpButton = document.getElementById('helpButton');
-    const helpModalContainer = document.getElementById('helpModalContainer');
-    if (helpButton) {
-        helpButton.onclick = () => helpModalContainer.style.display = 'block';
-    }
-    window.onclick = (e) => { if (e.target === helpModalContainer) helpModalContainer.style.display = 'none'; };
+    const helpBtn = document.getElementById('helpButton');
+    const helpModal = document.getElementById('helpModalContainer');
+    if (helpBtn) helpBtn.onclick = () => helpModal.style.display = 'block';
+    window.onclick = (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; };
   </script>
 
 </body>
